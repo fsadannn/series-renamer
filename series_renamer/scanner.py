@@ -1,7 +1,6 @@
 import re
 from enum import Enum
 from typing import Container, List, Optional, Union
-from xmlrpc.client import boolean
 
 try:
     from .stopwords import stopwords
@@ -59,10 +58,10 @@ class TokenTypeHelper:
     def __init__(self, regex_exp: Union[str, re.Pattern, Container]):
         if isinstance(regex_exp, str):
             self._regex_exp = re.compile(regex_exp)
-            self._has_contains: boolean = False
+            self._has_contains: bool = False
         else:
             self._regex_exp = regex_exp
-            self._has_contains: boolean = isinstance(regex_exp, Container)
+            self._has_contains: bool = isinstance(regex_exp, Container)
 
     def match(self, text: str) -> Optional[re.Match]:
         if self._has_contains:
