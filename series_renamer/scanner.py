@@ -7,12 +7,12 @@ try:
 except ImportError:
     from stopwords import stopwords
 
-tokens_str = '[a-zA-Z0-9!ñÑ\'áéíóú]+|\-|'
-tokens_str += '|'.join(['\{', '\(', '\['])
-tokens_str += '|' + '|'.join(['\}', '\)', '\]'])
+tokens_str = r'[a-zA-Z0-9!ñÑ\'áéíóú]+|\-|'
+tokens_str += '|'.join([r'\{', r'\(', r'\['])
+tokens_str += '|' + '|'.join([r'\}', r'\)', r'\]'])
 tokens_expression = re.compile(tokens_str, re.I)
 
-only_number = re.compile('(?<!\D)[0-9]+(?!\D)')
+only_number = re.compile(r'(?<!\D)[0-9]+(?!\D)')
 
 ordinal = re.compile(
     '1st|2nd|3rd|[1-9][0-9?]th|1ro|2do|3ro|[4-6]to|7mo|8vo|9no', re.I)
@@ -90,6 +90,12 @@ class Token:
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}< type={self.type} text="{self.text}" >'
 
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, Token):
+            raise TypeError(f'Can not compare Token with {o.__class__}')
+
+        return self.type == o.type and self.text == o.text
+
 
 def make_token(text: str) -> Token:
     token_type: TokenType = TokenType.Word
@@ -161,7 +167,7 @@ def make_token(text: str) -> Token:
     return Token(text, token_type)
 
 
-def tokenize(txt) -> List[Token]:
+def tokenize(txt: str) -> List[Token]:
     tokens: List[Token] = []
 
     for i in map(lambda x: x.group().strip(), tokens_expression.finditer(txt)):

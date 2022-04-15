@@ -5,10 +5,21 @@ description = ""
 authors = ["fsadannn <fsadannn@gmail.com>"]
 license = "MIT"
 
+# [[tool.poetry.source]]
+# name = "nexus"
+# url = "http://nexus.prod.uci.cu/repository/pypi-all/simple"
+# default = true
+
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 
 [tool.poetry.dev-dependencies]
+pylint = "^2.13.5"
+pytest = "^7.1.1"
+pytest-cov = "^3.0.0"
+codecov = "^2.1.12"
+tomli = "^2.0.1"
+xeger = "^0.3.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
