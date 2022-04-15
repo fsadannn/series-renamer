@@ -1,5 +1,5 @@
 import re
-from enum import Enum, auto
+from enum import Enum
 from typing import Container, List, Optional, Union
 from xmlrpc.client import boolean
 
@@ -8,7 +8,9 @@ try:
 except ImportError:
     from stopwords import stopwords
 
-tokens_str = r'[a-zA-Z0-9!ñÑ\'áéíóúÁÉÍÓÚ]+|\-|'
+dates_str = '[0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4}|[0-9]{2,4}[/-][0-9]{1,2}[/-][0-9]{1,2}'
+
+tokens_str = dates_str + r'|[a-zA-Z0-9!ñÑ\'áéíóúÁÉÍÓÚ@]+|\-|'
 tokens_str += '|'.join([r'\{', r'\(', r'\['])
 tokens_str += '|' + '|'.join([r'\}', r'\)', r'\]'])
 tokens_expression = re.compile(tokens_str, re.I)
@@ -16,17 +18,16 @@ tokens_expression = re.compile(tokens_str, re.I)
 only_number = re.compile(r'(?<!\D)[0-9]+(?!\D)')
 
 ordinal = re.compile(
-    '1st|2nd|3rd|[1-9][0-9?]th|1ro|2do|3ro|[4-6]to|7mo|8vo|9no', re.I)
+    '1st|2nd|3rd|[1-9][0-9]?th|1ro|2do|3ro|[4-6]to|7mo|8vo|9no', re.I)
 
 daysStr = ['lunes', 'martes', 'mi[eé]rcoles', 'jueves', 'viernes', 's[áa]bado', 'domingo',
            'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 days = re.compile('|'.join(daysStr), re.I)
 
-dates = re.compile(
-    '[0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4}|[0-9]{2,4}[/-][0-9]{1,2}[/-][0-9]{1,2}')
+dates = re.compile(dates_str)
 
 resolution = re.compile(
-    '1080p|720p|480p|1920 *?[xX] *?1080|1280 *?[xX] *?720|720 *?[xX] *?480')
+    '1080p|720p|480p|1920[xX@]1080|1280[xX@]720|720[xX@]480')
 
 codec = re.compile('[Xx]264|[xX]265')
 
@@ -79,6 +80,7 @@ class TokenType(Enum):
     NumberedEpisode = TokenTypeHelper(epin)
     EpisodeWord = TokenTypeHelper(epi)
     SeasonEpisode = TokenTypeHelper(seasonepi)
+    ScreenResolution = TokenTypeHelper(resolution)
     ChapterSeason = TokenTypeHelper(captemp)
     KeepJoined = TokenTypeHelper(keep_joined)
     StopWord = TokenTypeHelper(stopwords)
@@ -87,7 +89,6 @@ class TokenType(Enum):
     Dash = TokenTypeHelper('-')
     Day = TokenTypeHelper(days)
     Date = TokenTypeHelper(dates)
-    ScreenResolution = TokenTypeHelper(resolution)
     VideoCodec = TokenTypeHelper(codec)
     Ordinal = TokenTypeHelper(ordinal)
     NumberedWord = TokenTypeHelper(letn)
@@ -139,3 +140,17 @@ def tokenize(txt: str) -> List[Token]:
         tokens.append(token)
 
     return tokens
+
+
+from xeger import Xeger
+
+
+def sample():
+    x = Xeger(limit=15)
+    return x.xeger(resolution)
+
+
+exp = 'i'
+print(exp)
+tks = tokenize(exp)
+print(tks)

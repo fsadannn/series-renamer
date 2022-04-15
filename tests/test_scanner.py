@@ -8,31 +8,25 @@ def compare_results(tks: List[Token], tks1: List[Token]):
     return all(map(lambda x: x[0] == x[1], zip(tks, tks1)))
 
 
-def sample_epin():
-    x = Xeger(limit=15)
-    return x.xeger(epin)
+def sample(exp, limit=20):
+    x = Xeger(limit=limit)
+    return x.xeger(exp)
 
 
-def sample_epi():
-    x = Xeger(limit=15)
-    return x.xeger(epi)
-
-
-def test_NumberedEpisode():
+def test_tokens():
     n_test = 10
-    for _ in range(n_test):
-        exp = sample_epin()
-        tks = tokenize(exp)
-        result = [Token(exp, TokenType.NumberedEpisode)]
-        assert len(tks) == 1
-        assert compare_results(tks, result)
+    for t_type in TokenType:
+        if t_type.value._has_contains:
+            continue
 
+        if t_type is TokenType.Word:
+            continue
 
-def test_EpisodeWord():
-    n_test = 10
-    for _ in range(n_test):
-        exp = sample_epi()
-        tks = tokenize(exp)
-        result = [Token(exp, TokenType.EpisodeWord)]
-        assert len(tks) == 1
-        assert compare_results(tks, result)
+        regex_exp = t_type.value._regex_exp
+
+        for _ in range(n_test):
+            exp = sample(regex_exp)
+            tks = tokenize(exp)
+            result = [Token(exp, t_type)]
+            assert len(tks) == 1
+            assert compare_results(tks, result)
