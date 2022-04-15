@@ -1,13 +1,14 @@
 import re
 from enum import Enum, auto
-from typing import List
+from typing import Container, List, Optional, Union
+from xmlrpc.client import boolean
 
 try:
     from .stopwords import stopwords
 except ImportError:
     from stopwords import stopwords
 
-tokens_str = r'[a-zA-Z0-9!ñÑ\'áéíóú]+|\-|'
+tokens_str = r'[a-zA-Z0-9!ñÑ\'áéíóúÁÉÍÓÚ]+|\-|'
 tokens_str += '|'.join([r'\{', r'\(', r'\['])
 tokens_str += '|' + '|'.join([r'\}', r'\)', r'\]'])
 tokens_expression = re.compile(tokens_str, re.I)
@@ -44,32 +45,54 @@ letn = re.compile('[0-9][a-záéíóú]', re.I)
 
 gopener = ['{', '(', '[']
 gcloser = ['}', ')', ']']
-grouping_d = {i: j for i, j in list(
-    zip(gopener, gcloser)) + list(zip(gcloser, gopener))}
+grouping_d = dict(list(zip(gopener, gcloser)) + list(zip(gcloser, gopener)))
 gopener = set(gopener)
 gcloser = set(gcloser)
 
 keep_joined = set(['kun', 'sama', 'chan', 'kai', 'senpai', 'man'])
 
 
+class TokenTypeHelper:
+    __slots__ = ('_regex_exp', '_has_contains')
+
+    def __init__(self, regex_exp: Union[str, re.Pattern, Container]):
+        if isinstance(regex_exp, str):
+            self._regex_exp = re.compile(regex_exp)
+            self._has_contains: boolean = False
+        else:
+            self._regex_exp = regex_exp
+            self._has_contains: boolean = isinstance(regex_exp, Container)
+
+    def match(self, text: str) -> Optional[re.Match]:
+        if self._has_contains:
+            return text in self
+
+        return self._regex_exp.match(text)
+
+    def __contains__(self, x):
+        if not self._has_contains:
+            raise TypeError(f'{self._regex_exp} is not a Container')
+        return x in self._regex_exp
+
+
 class TokenType(Enum):
-    Word = auto()
-    GroupingOpen = auto()
-    GroupingClose = auto()
-    Dash = auto()
-    Day = auto()
-    Date = auto()
-    ScreenResolution = auto()
-    VideoCodec = auto()
-    KeepJoined = auto()
-    Number = auto()
-    Ordinal = auto()
-    EpisodeWord = auto()
-    NumberedEpisode = auto()
-    StopWord = auto()
-    ChapterSeason = auto()
-    SeasonEpisode = auto()
-    NumberedWord = auto()
+    NumberedEpisode = TokenTypeHelper(epin)
+    EpisodeWord = TokenTypeHelper(epi)
+    SeasonEpisode = TokenTypeHelper(seasonepi)
+    ChapterSeason = TokenTypeHelper(captemp)
+    KeepJoined = TokenTypeHelper(keep_joined)
+    StopWord = TokenTypeHelper(stopwords)
+    GroupingOpen = TokenTypeHelper(gopener)
+    GroupingClose = TokenTypeHelper(gcloser)
+    Dash = TokenTypeHelper('-')
+    Day = TokenTypeHelper(days)
+    Date = TokenTypeHelper(dates)
+    ScreenResolution = TokenTypeHelper(resolution)
+    VideoCodec = TokenTypeHelper(codec)
+    Ordinal = TokenTypeHelper(ordinal)
+    NumberedWord = TokenTypeHelper(letn)
+    Number = TokenTypeHelper(only_number)
+    Word = TokenTypeHelper(r'[a-zA-Z0-9!ñÑ\'áéíóúÁÉÍÓÚ]')
 
 
 class Token:
@@ -100,69 +123,10 @@ class Token:
 def make_token(text: str) -> Token:
     token_type: TokenType = TokenType.Word
 
-    if epin.match(text):
-        token_type = TokenType.NumberedEpisode
-        return Token(text, token_type)
-
-    if epi.match(text):
-        token_type = TokenType.EpisodeWord
-        return Token(text, token_type)
-
-    if captemp.match(text):
-        token_type = TokenType.ChapterSeason
-        return Token(text, token_type)
-
-    if seasonepi.match(text):
-        token_type = TokenType.SeasonEpisode
-        return Token(text, token_type)
-
-    if text in keep_joined:
-        token_type = TokenType.KeepJoined
-        return Token(text, token_type)
-
-    if text in stopwords:
-        token_type = TokenType.StopWord
-        return Token(text, token_type)
-
-    if text in gopener:
-        token_type = TokenType.GroupingOpen
-        return Token(text, token_type)
-
-    if text in gcloser:
-        token_type = TokenType.GroupingClose
-        return Token(text, token_type)
-
-    if text == '-':
-        token_type = TokenType.Dash
-        return Token(text, token_type)
-
-    if days.match(text):
-        token_type = TokenType.Day
-        return Token(text, token_type)
-
-    if dates.match(text):
-        token_type = TokenType.Date
-        return Token(text, token_type)
-
-    if resolution.match(text):
-        token_type = TokenType.ScreenResolution
-        return Token(text, token_type)
-
-    if codec.match(text):
-        token_type = TokenType.VideoCodec
-        return Token(text, token_type)
-
-    if ordinal.match(text):
-        token_type = TokenType.Ordinal
-        return Token(text, token_type)
-
-    if letn.match(text):
-        token_type = TokenType.NumberedWord
-        return Token(text, token_type)
-
-    if only_number.match(text):
-        token_type = TokenType.Number
-        return Token(text, token_type)
+    for t_type in TokenType:
+        if t_type.value.match(text):
+            token_type = t_type
+            break
 
     return Token(text, token_type)
 
