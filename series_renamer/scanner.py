@@ -140,17 +140,3 @@ def tokenize(txt: str) -> List[Token]:
         tokens.append(token)
 
     return tokens
-
-
-from xeger import Xeger
-
-
-def sample():
-    x = Xeger(limit=15)
-    return x.xeger(resolution)
-
-
-exp = 'i'
-print(exp)
-tks = tokenize(exp)
-print(tks)
