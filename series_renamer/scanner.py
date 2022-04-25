@@ -2,14 +2,11 @@ import re
 from enum import Enum
 from typing import Container, List, Optional, Union
 
-try:
-    from .stopwords import stopwords
-except ImportError:
-    from stopwords import stopwords
+from .stopwords import stopwords
 
 dates_str = '[0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4}|[0-9]{2,4}[/-][0-9]{1,2}[/-][0-9]{1,2}'
 
-tokens_str = dates_str + r'|[a-zA-Z0-9!ñÑ\'áéíóúÁÉÍÓÚ@]+|\-|'
+tokens_str = dates_str + r'|[a-zA-Z0-9!ñÑ\'áéíóúÁÉÍÓÚ@]+|\-|&|'
 tokens_str += '|'.join([r'\{', r'\(', r'\['])
 tokens_str += '|' + '|'.join([r'\}', r'\)', r'\]'])
 tokens_expression = re.compile(tokens_str, re.I)
@@ -49,7 +46,7 @@ grouping_d = dict(list(zip(gopener, gcloser)) + list(zip(gcloser, gopener)))
 gopener = set(gopener)
 gcloser = set(gcloser)
 
-keep_joined = set(['kun', 'sama', 'chan', 'kai', 'senpai', 'man'])
+keep_joined = set(['kun', 'sama', 'chan', 'kai', 'senpai', 'man', 'san'])
 
 
 class TokenTypeHelper:
@@ -68,6 +65,12 @@ class TokenTypeHelper:
             return text in self
 
         return self._regex_exp.match(text)
+
+    def search(self, text: str) -> Optional[re.Match]:
+        if self._has_contains:
+            return text in self
+
+        return self._regex_exp.search(text)
 
     def __contains__(self, x):
         if not self._has_contains:
@@ -92,15 +95,17 @@ class TokenType(Enum):
     Ordinal = TokenTypeHelper(ordinal)
     NumberedWord = TokenTypeHelper(letn)
     Number = TokenTypeHelper(only_number)
-    Word = TokenTypeHelper(r'[a-zA-Z0-9!ñÑ\'áéíóúÁÉÍÓÚ]')
+    Word = TokenTypeHelper(r'[a-zA-Z0-9!ñÑ\'áéíóúÁÉÍÓÚ@]')
+    JoinedWord = TokenTypeHelper(())
 
 
 class Token:
-    __slots__ = ('_text', '_type')
+    __slots__ = ('_text', '_type', '_position')
 
-    def __init__(self, expression: str, token_type: TokenType) -> None:
+    def __init__(self, expression: str, token_type: TokenType, position: int) -> None:
         self._text = expression
         self._type = token_type
+        self._position = position  # being at 1
 
     @property
     def text(self):
@@ -110,17 +115,21 @@ class Token:
     def type(self):
         return self._type
 
+    @property
+    def position(self):
+        return self._position
+
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}< type={self.type} text="{self.text}" >'
+        return f'{self.__class__.__name__}< type={self.type} text="{self.text}" position={self.position} >'
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, Token):
             raise TypeError(f'Can not compare Token with {o.__class__}')
 
-        return self.type == o.type and self.text == o.text
+        return self.type == o.type and self.text == o.text and self.position == o.position
 
 
-def make_token(text: str) -> Token:
+def make_token(text: str, position: int) -> Token:
     token_type: TokenType = TokenType.Word
 
     for t_type in TokenType:
@@ -128,14 +137,14 @@ def make_token(text: str) -> Token:
             token_type = t_type
             break
 
-    return Token(text, token_type)
+    return Token(text, token_type, position)
 
 
 def tokenize(txt: str) -> List[Token]:
     tokens: List[Token] = []
 
-    for i in map(lambda x: x.group().strip(), tokens_expression.finditer(txt)):
-        token = make_token(i)
+    for n, i in enumerate(map(lambda x: x.group().strip(), tokens_expression.finditer(txt))):
+        token = make_token(i, n + 1)
         tokens.append(token)
 
     return tokens

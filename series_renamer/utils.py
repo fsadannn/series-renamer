@@ -56,7 +56,5 @@ class Stack:  # pragma: no cover
         val = self._stack.pop()
         return val
 
-    def __str__(self) -> str:
-        return ' '.join(
-            list(map(lambda x: str(x.value), self._stack))
-        )
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}< id="{self.id}" >'

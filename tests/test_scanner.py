@@ -27,6 +27,6 @@ def test_tokens():
         for _ in range(n_test):
             exp = sample(regex_exp)
             tks = tokenize(exp)
-            result = [Token(exp, t_type)]
+            result = [Token(exp, t_type, 1)]
             assert len(tks) == 1
             assert compare_results(tks, result)
