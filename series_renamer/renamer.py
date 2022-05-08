@@ -198,7 +198,7 @@ class Processor:
                 chapter_candidates.append(token)
                 context.push(token)
 
-            elif token.type == TokenType.Dash:
+            elif token.type == TokenType.Dash and not tokens_stack.empty:
                 next_token: Token = tokens_stack.top()
 
                 if next_token.type != TokenType.KeepJoined:
