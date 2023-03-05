@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Container, List, Optional, Union
 
 from .stopwords import stopwords
-from .utils import GContainer
+from .utils import GContainer, MatchP, PatternP, TPattern
 
 dates_str = '[0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4}|[0-9]{2,4}[/-][0-9]{1,2}[/-][0-9]{1,2}'
 float_number = '[0-9]+\.[0-9]+'
@@ -55,13 +55,13 @@ def is_only_number(txt: str) -> bool:
     return all(map(lambda x: x.isnumeric(), txt.split('.')))
 
 
-only_number = GContainer[str](is_only_number)
+only_number = TPattern(is_only_number)
 
 
 class TokenTypeHelper:
     __slots__ = ('_regex_exp', '_has_contains')
 
-    def __init__(self, regex_exp: Union[str, re.Pattern, Container]):
+    def __init__(self, regex_exp: Union[str, PatternP, Container]):
         if isinstance(regex_exp, str):
             self._regex_exp = re.compile(regex_exp)
             self._has_contains: bool = False
@@ -69,13 +69,13 @@ class TokenTypeHelper:
             self._regex_exp = regex_exp
             self._has_contains: bool = isinstance(regex_exp, Container)
 
-    def match(self, text: str) -> Optional[re.Match]:
+    def match(self, text: str) -> Optional[MatchP]:
         if self._has_contains:
             return text in self
 
         return self._regex_exp.match(text)
 
-    def search(self, text: str) -> Optional[re.Match]:
+    def search(self, text: str) -> Optional[MatchP]:
         if self._has_contains:
             return text in self
 
@@ -84,6 +84,7 @@ class TokenTypeHelper:
     def __contains__(self, x):
         if not self._has_contains:
             raise TypeError(f'{self._regex_exp} is not a Container')
+
         return x in self._regex_exp
 
 

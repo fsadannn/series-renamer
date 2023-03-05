@@ -1,6 +1,7 @@
 from typing import List
 
 from series_renamer.scanner import Token, TokenType, tokenize
+from series_renamer.utils import TPattern
 from xeger import Xeger
 
 
@@ -23,6 +24,9 @@ def test_tokens():
             continue
 
         regex_exp = t_type.value._regex_exp
+
+        if isinstance(regex_exp, TPattern):
+            continue
 
         for _ in range(n_test):
             exp = sample(regex_exp)

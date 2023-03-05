@@ -1,6 +1,18 @@
 import datetime
+from abc import abstractmethod
 from math import floor
-from typing import Callable, Container, Generic, TypeVar, Union
+from operator import le
+from re import Match
+from typing import (
+    Callable,
+    Container,
+    Generic,
+    Optional,
+    Protocol,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 T = TypeVar('T')
 
@@ -81,3 +93,61 @@ class GContainer(Generic[T], Container):
 
     def __contains__(self, obj: T) -> bool:
         return self._comparison_fn(obj)
+
+
+class MatchP(Protocol):
+    @abstractmethod
+    def group(self, *args: Union[int, str]) -> Union[str, Tuple[str]]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def groups(self, *args: Union[int, str]) -> Tuple[str]:
+        raise NotImplementedError
+
+
+class TMatch(MatchP):
+    __slots__ = ('_text',)
+
+    def __init__(self, text: str):
+        self._text = text
+
+    def group(self, *args: Union[int, str]) -> Union[str, Tuple[str]]:
+        if len(args) != 0:
+            raise IndexError
+
+        return self._text
+
+    def groups(self, *args: Union[int, str]) -> Tuple[str]:
+        if len(args) != 0:
+            raise IndexError
+
+        return (self._text,)
+
+
+class PatternP(Protocol):
+    @abstractmethod
+    def match(self, string: str, *args) -> Optional[MatchP]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def search(self, string: str, *args) -> Optional[MatchP]:
+        raise NotImplementedError
+
+
+class TPattern(PatternP):
+    __slots__ = ('_comparison_fn',)
+
+    def __init__(self, comparison_fn: Callable[[T], bool]):
+        self._comparison_fn = comparison_fn
+
+    def __find(self, string: str) -> Optional[MatchP]:
+        if not self._comparison_fn(string):
+            return None
+
+        return TMatch(string)
+
+    def match(self, string: str, *args) -> Optional[MatchP]:
+        return self.__find(string)
+
+    def search(self, string: str, *args) -> Optional[MatchP]:
+        return self.__find(string)
