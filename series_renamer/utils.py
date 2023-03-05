@@ -1,6 +1,8 @@
 import datetime
 from math import floor
-from typing import Union
+from typing import Callable, Container, Generic, TypeVar, Union
+
+T = TypeVar('T')
 
 _current_year = datetime.date.today().year
 _year_gap = 100
@@ -29,7 +31,7 @@ def number_to_str(number: Union[float, int]) -> str:
 
 
 class Stack:  # pragma: no cover
-    __slots__ = tuple(['_stack', '_id'])
+    __slots__ = ('_stack', '_id')
 
     def __init__(self, idd: str = ''):
         self._stack: list = []
@@ -69,3 +71,13 @@ class Stack:  # pragma: no cover
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}< id="{self.id}" >'
+
+
+class GContainer(Generic[T], Container):
+    __slots__ = ('_comparison_fn',)
+
+    def __init__(self, comparison_fn: Callable[[T], bool]):
+        self._comparison_fn = comparison_fn
+
+    def __contains__(self, obj: T) -> bool:
+        return self._comparison_fn(obj)

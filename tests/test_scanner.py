@@ -1,6 +1,6 @@
 from typing import List
 
-from series_renamer.scanner import Token, TokenType, epi, epin, tokenize
+from series_renamer.scanner import Token, TokenType, tokenize
 from xeger import Xeger
 
 
@@ -28,5 +28,6 @@ def test_tokens():
             exp = sample(regex_exp)
             tks = tokenize(exp)
             result = [Token(exp, t_type, 1)]
+
             assert len(tks) == 1
             assert compare_results(tks, result)

@@ -19,4 +19,4 @@ sys.path.pop(0)
 
 if series_renamer.__version__ != version:
     with open(script_dir.joinpath('series_renamer', 'version.py'), 'w') as f:
-        f.write(f'ersion = "{version}"')
+        f.write(f'version = "{version}"')

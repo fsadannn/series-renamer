@@ -36,6 +36,7 @@ class ChapterMetadata:
         self.serie_name = serie_name_str.strip()
 
         self.chapter_name = ''
+        print(chapter_name)
 
         if chapter_name is not None:
             chapter_name_str = ''
@@ -46,7 +47,8 @@ class ChapterMetadata:
                 elif len(i.text) < 3 or upperm.match(i.text):
                     chapter_name_str += ' ' + i.text
                 elif len(i.text) >= 2:
-                    chapter_name_str += i.text[0].upper() + i.text[1:].lower()
+                    chapter_name_str += ' ' + \
+                        i.text[0].upper() + i.text[1:].lower()
 
             self.chapter_name = chapter_name_str.strip()
 

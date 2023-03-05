@@ -3,17 +3,19 @@ from enum import Enum
 from typing import Container, List, Optional, Union
 
 from .stopwords import stopwords
+from .utils import GContainer
 
 dates_str = '[0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4}|[0-9]{2,4}[/-][0-9]{1,2}[/-][0-9]{1,2}'
 float_number = '[0-9]+\.[0-9]+'
+numbered_episode_str = 'chapters?[0-9]+\.?[0-9]*|episodes?[0-9]+\.?[0-9]*|episodios?[0-9]+\.?[0-9]*|cap[ií]tulos?[0-9]+\.?[0-9]*|caps?[0-9]+\.?[0-9]*'
 
-tokens_str = dates_str + f'|{float_number}' + \
+tokens_str = dates_str + f'|{numbered_episode_str}|{float_number}' + \
     r'|[a-zA-Z0-9!ñÑ\'áéíóúÁÉÍÓÚ@]+|\-|&|'
 tokens_str += '|'.join([r'\{', r'\(', r'\['])
 tokens_str += '|' + '|'.join([r'\}', r'\)', r'\]'])
 tokens_expression = re.compile(tokens_str, re.I)
 
-only_number = re.compile(r'(?<!\D)[0-9]+\.?[0-9]*(?!\D)')
+# only_number = re.compile(r'(?<!\D)[0-9]+((?<=\.[0-9])?(\.[0-9]))?(?!\D)')
 
 ordinal = re.compile(
     '1st|2nd|3rd|[1-9][0-9]?th|1ro|2do|3ro|[4-6]to|7mo|8vo|9no', re.I)
@@ -47,6 +49,13 @@ gopener = set(gopener)
 gcloser = set(gcloser)
 
 keep_joined = set(['kun', 'sama', 'chan', 'kai', 'senpai', 'man', 'san'])
+
+
+def is_only_number(txt: str) -> bool:
+    return all(map(lambda x: x.isnumeric(), txt.split('.')))
+
+
+only_number = GContainer[str](is_only_number)
 
 
 class TokenTypeHelper:
@@ -107,15 +116,15 @@ class Token:
         self._type = token_type
         self._position = position  # being at 1
 
-    @property
+    @ property
     def text(self):
         return self._text
 
-    @property
+    @ property
     def type(self):
         return self._type
 
-    @property
+    @ property
     def position(self):
         return self._position
 
